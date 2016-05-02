@@ -24,7 +24,6 @@ import base64  # file encode
 import urllib2  # file download from url
 import threading
 from openerp import models, fields, api,  sql_db, _
-from openerp.api import Environment
 from openerp.exceptions import Warning
 from openerp.addons.connector.session import ConnectorSession
 from datetime import datetime
@@ -94,7 +93,7 @@ class Shopify(models.Model):
                 shop_url = backend.shopify_url % (backend.api_key,
                                                   backend.password)
                 shopify.ShopifyResource.set_site(shop_url)
-                shop = shopify.Shop.current()
+                shopify.Shop.current()
             except Exception:
                 raise Warning(_('UnauthorizedAccess: "[API] Invalid API key or access token (unrecognized login or wrong password)'))
 
@@ -134,7 +133,7 @@ class Shopify(models.Model):
                 session = ConnectorSession(self.env.cr, self.env.uid,
                                            context=self.env.context)
                 product_category_ids = session.search('product.category', [('name',
-                                                    '=', 'Shopify Products')])
+                                                      '=', 'Shopify Products')])
                 if not product_category_ids:
                     category_id = session.create('product.category',
                                                  {'name': 'Shopify Products'})
@@ -154,7 +153,7 @@ class Shopify(models.Model):
                                      'shopify_product_cate_id': dict_category['id']})
                         product_cate_id = session.search('product.category',
                                                          [('shopify_product_cate_id',
-                                                         '=', dict_category['id'])])
+                                                           '=', dict_category['id'])])
                         if not product_cate_id:
                             session.create('product.category', vals)
                             new_cr.commit()
@@ -165,7 +164,7 @@ class Shopify(models.Model):
             raise Warning(_('Facing a problems while importing product categories!'))
         finally:
             self.env.cr.close()
-            
+
     @api.multi
     def import_product_product(self):
         try:
@@ -195,22 +194,22 @@ class Shopify(models.Model):
                             for categ in custom_collection:
                                 product_cate_obj = session.search('product.category',
                                                                   [('shopify_product_cate_id',
-                                                                '=', categ.__dict__['attributes']['id'])])
+                                                                    '=', categ.__dict__['attributes']['id'])])
                                 if product_cate_obj:
                                     vals_product_tmpl.update({'categ_id': product_cate_obj[0]})
                         vals_product_tmpl.update({'name': dict_attr['title'],
-                                                'type': 'consu',
-                                                'shopify_product_id': dict_attr['id'],
-                                                'description': dict_attr['body_html'],
-                                                'state': 'add'})
+                                                  'type': 'consu',
+                                                  'shopify_product_id': dict_attr['id'],
+                                                  'description': dict_attr['body_html'],
+                                                  'state': 'add'})
                         product_tid = session.create('product.template', vals_product_tmpl)
                         new_cr.commit()
                         variants = dict_attr['variants']
                         for variant in variants:
                             dict_variant = variant.__dict__['attributes']
-                            u = session.create('product.product',
-                                               {'product_tmpl_id': product_tid,
-                                                'product_sfy_variant_id': dict_variant['id']})
+                            session.create('product.product',
+                                           {'product_tmpl_id': product_tid,
+                                            'product_sfy_variant_id': dict_variant['id']})
                             new_cr.commit()
         except:
             raise Warning(_('Facing a problems while importing product!'))
